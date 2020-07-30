@@ -1,0 +1,130 @@
+--- 
+- name: Install AWX
+  hosts: all
+  become: true
+
+  tasks:
+    - name: Update Ubuntu 
+      command: apt update
+ 
+    - name: Upgrade Ubuntu
+      command: apt -y upgrade
+    
+    - name: Install Basic Dependencies 
+      command: apt -y install apt-transport-https ca-certificates curl gnupg-agent software-properties-common
+
+    - name: Import Docker GPG key
+      apt_key:
+        url: https://download.docker.com/linux/ubuntu/gpg
+        state: present
+
+    - apt_repository:
+        repo: deb https://download.docker.com/linux/ubuntu focal stable
+        state: present
+
+    - name: Update Ubuntu
+      command: apt update
+
+    - name: Upgrade Ubuntu
+      command: apt -y upgrade
+
+    - name: Install Ansible
+      apt:
+        name: ansible
+        state: present
+
+    - name: Install docker-ce
+      apt:
+        name: docker-ce
+        state: present
+
+    - name: Install docker-ce-cli
+      apt:
+        name: docker-ce-cli
+        state: present
+
+    - name: Install containerd.io
+      apt:
+        name: containerd.io
+        state: present
+
+    - name: Ensure group Docker Exists
+      group:
+        name: docker
+        state: present
+
+    - name: Add user to docker group
+      command: usermod -aG docker ryan
+
+    - name: Install Docker Compose
+      get_url:
+        url: https://github.com/docker/compose/releases/download/1.26.2/docker-compose-Linux-x86_64
+        dest: /home/ryan
+
+    - name: Apply Executable permissions to the binary
+      file: dest=/home/ryan/docker-compose-Linux-x86_64 mode=+x
+
+    - name: Move Docker Compose to file path
+      command:  mv docker-compose-Linux-x86_64 /usr/local/bin/docker-compose
+
+    - name: Install nodejs
+      apt:
+        name: nodejs
+        state: present
+    
+    - name: Install NPM
+      apt:
+       name: npm
+       state: present
+
+    - name: Install NPM --Global
+      command: npm install npm --global
+
+    - name: Dpkg
+      command: dpkg --configure -a
+
+    - name: Install Python3
+      apt:
+        name: python3-pip
+        state: present
+
+    - name: Install Git
+      apt:
+        name:  git
+        state: present
+
+    - name: Install pwgen
+      apt:
+        name: pwgen
+        state: present
+
+    - name: Install vim
+      apt:
+        name: vim
+        state: present
+    
+    - name: Install Request
+      command: pip3 install requests==2.14.2
+
+    - name: Install Docker Compose
+      command: pip3 install docker-compose==1.25.0
+
+    - name: Git clone AWX
+      command: git clone --depth 50 https://github.com/ansible/awx.git
+
+    - name: Generate Random Password
+      command: pwgen -N 1 -s 30
+      register: output
+
+    - debug: var=output.stdout_lines
+
+    - name: Copy file with owner and permissions
+      copy:
+       src: /mnt/c/Users/heinleir/Desktop/Ansible/inventory
+       dest: /home/ryan/awx/installer/
+       owner: ryan
+       group: ryan
+       mode: '0644'
+
+    - name: Run AWX Playbook
+      command: ansible-playbook -i awx/installer/inventory  awx/installer/install.yml
