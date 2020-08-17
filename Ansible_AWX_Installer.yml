@@ -93,11 +93,6 @@
         name:  git
         state: present
 
-    - name: Install pwgen
-      apt:
-        name: pwgen
-        state: present
-
     - name: Install vim
       apt:
         name: vim
@@ -112,18 +107,12 @@
     - name: Git clone AWX
       command: git clone --depth 50 https://github.com/ansible/awx.git
 
-    - name: Generate Random Password
-      command: pwgen -N 1 -s 30
-      register: output
-
-    - debug: var=output.stdout_lines
-
     - name: Copy file with owner and permissions
       copy:
-       src: /mnt/c/Users/heinleir/Desktop/Ansible/inventory
-       dest: /home/ryan/awx/installer/
-       owner: ryan
-       group: ryan
+       src: ~/githubfolder/Ansible/inventory
+       dest: ~/pathtoawxfolder/awx/installer/
+       owner: <username>
+       group: <username>
        mode: '0644'
 
     - name: Run AWX Playbook
